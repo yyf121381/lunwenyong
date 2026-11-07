@@ -1,0 +1,25 @@
+{
+ "stage_cognition_proposal": [
+  {
+   "text": "你之前说过喜欢组合 B",
+   "refs": ["mem_pref"]
+  }
+ ],
+ "stage_draft": "你之前说过喜欢组合 B，我记着呢。今天给你推荐歌曲 I。",
+ "stage_pre_step": {
+  "branch": "rewritten",
+  "support_ref": null,
+  "draft": "我记下你现在说的喜欢组合 B，我记着呢。今天给你推荐歌曲 I。",
+  "claims": []
+ },
+ "stage_formal_audit_on_proposal": {
+  "support": [],
+  "hard_fail": false
+ },
+ "stage_formal_audit_after_rewrite": {
+  "support": [],
+  "hard_fail": false
+ },
+ "stage_delivered_reply": "我记下你现在说的喜欢组合 B，我记着呢。今天给你推荐歌曲 I。",
+ "rewrite_reproduced": true
+}
