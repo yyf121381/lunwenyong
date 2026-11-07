@@ -1,0 +1,375 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=27mm]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs,array,longtable}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage[pdfencoding=auto,psdextra]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue,
+ pdftitle={From Companionship Goals to Maintenance Limits: A Case Study of a Classroom Conversational Agent},
+ pdfauthor={Liuqing Yang},pdfsubject={Retrospective software engineering case study}}
+\urlstyle{same}
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{1.3em}
+\setlength{\emergencystretch}{2em}
+\setlist{nosep,leftmargin=*}
+\renewcommand{\arraystretch}{1.16}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\lstset{basicstyle=\small\ttfamily,columns=fullflexible,breaklines=true,
+ frame=single,rulecolor=\color{black!30},showstringspaces=false,
+ aboveskip=9pt,belowskip=9pt}
+\title{From Companionship Goals to Maintenance Limits:\\
+ A Case Study of a Classroom Conversational Agent}
+\author{Liuqing Yang\\
+ Jiangxi Institute of Applied Science and Technology\\
+ Nanchang, China\\
+ \texttt{404350437@qq.com}}
+\date{November 7, 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We developed LingYao, a companion-oriented conversational agent, to support an undergraduate course through sustained dialogue and learning assistance. Project records documented repeated clarification requests, difficulties continuing earlier conversations, confusion between student identity and scenario content, and inconsistent handling of corrections. Engineering responses expanded from prompting and local controls to memory governance, authorization, and separate cognition and expression responsibilities, including architectural restructuring. This retrospective single-system case study combines dialogue and memory records, contemporaneous design documents, code inspection, controlled reproductions, and repair reports. We examine eight convenience-selected classroom cases and a separately discovered pre-audit mechanism. The cases include unsupported acknowledgments of prior statements, appropriate refusals, and grounded recall initially misclassified by investigators. A fixed-input reproduction shows that a pre-audit step excluded long-term material from its support check, rewrote an acknowledgment, and cleared the claims subsequently available for audit. A multi-module patch passed specified deterministic and assembly checks; three live-model entry-point turns completed normally, without establishing sustained production improvement. The developer ultimately stopped maintaining this architecture after considering unresolved interaction problems, concentrated maintenance responsibility, and personally funded operating costs. The study connects user-visible interaction outcomes with evidence handling, component interfaces, and the practical conditions of continued maintenance.
+\end{abstract}
+\noindent\textbf{Keywords:} conversational agents; AI companions; communication breakdown; long-term memory; software maintenance; case study
+
+\section{Introduction}
+LingYao began with a practical teaching need. A university course was being prepared, and its teacher wanted students to interact with a companion-oriented AI that could support and guide learning over time. The intended experience required more than fluent individual answers: the system needed to understand the present request, resume earlier topics appropriately, accept corrections, and help the conversation move forward.
+
+Relational agents and social chatbots provide established research foundations for sustained interaction \cite{bickmore,xiaoice}. Studies of conversational interfaces also document gaps between users' expectations and system capabilities \cite{luger}, and the repeated reformulation or abandonment associated with communication breakdowns \cite{mavrina}. In our project, these concerns appeared as practical difficulties. Students sometimes had to explain again, the agent continued asking questions instead of acting, unsupported claims about prior statements were acknowledged, and available historical material was not always used.
+
+We responded through engineering. Early designs externalized persona, state, and dialogue strategies. Later changes added source attribution, temporal distinctions, and write governance. Architectural restructuring separated cognition, authorization, expression, and persistence. Each measure addressed a local concern, but the connections between measures became another source of difficulty. A stored record did not guarantee appropriate later use; a source field did not guarantee correct interpretation; a completed audit did not guarantee that the original claim had been examined.
+
+This paper asks three questions:
+\begin{itemize}
+\item \textbf{RQ1:} What obstacles to sustained dialogue are visible in the available records, and which can be connected to internal system evidence?
+\item \textbf{RQ2:} What did patches and architectural changes actually alter, and which effects remain limited to controlled tests?
+\item \textbf{RQ3:} How did unresolved problems, maintenance work, and resource conditions influence the decision to stop maintaining this architecture?
+\end{itemize}
+
+The contribution is a traceable engineering case, rather than a claim of architectural superiority. First, it connects classroom exchanges to system records, including failures, appropriate responses, and an investigator's corrected diagnosis. Second, it examines a deterministic mechanism in which the pre-audit step changes an answer and removes the claims available to a later audit. Third, it situates partial repairs within a project maintained principally by one teacher using personally funded services. We do not report demonstrated companionship or learning benefits. The scope ends with the original self-built architecture; subsequent platform changes are outside the study.
+
+\section{Related Work}
+\subsection{Sustained relationships and conversational repair}
+Bickmore and Picard studied relational agents intended to establish and maintain long-term social-emotional relationships \cite{bickmore}. The XiaoIce system paper describes long-term engagement alongside dialogue management, skills, and empathetic computing \cite{xiaoice}. These works contextualize our initial goal; their relationship outcomes and deployment scale are not evidence about LingYao. We do not treat conversation length as a proxy for companionship quality.
+
+Luger and Sellen examined the discrepancy between conversational-agent expectations and experience \cite{luger}. Mavrina et al. analyzed breakdown episodes during families' extended use of a voice assistant, including attempts to repair communication \cite{mavrina}. Gnewuch and Reinkemeier designed and evaluated collaborative repair strategies in customer service \cite{gnewuch}. Their principal unit is repair within interaction. We also examine a second level: developers changing prompts, code, material assembly, and responsibilities after interaction problems. A student's successful clarification is not the same as a repaired system defect; passing a developer test is not the same as improved subsequent interaction.
+
+\subsection{Production agents, memory, and maintenance}
+Hidden dependencies and boundary erosion can create maintenance burdens in machine-learning systems \cite{sculley}. A study of production agents identifies reliability as a leading practical concern \cite{pan}. Wu reports a longitudinal taxonomy of silent failures in a production agent runtime, including failures transformed into plausible narratives \cite{wu}. These works establish that incidents and maintenance can be research objects. The general observation that complex systems fail is not our contribution.
+
+Recent memory research considers dependency-guided rollback after faulty memories \cite{wang}, loss of authority boundaries during consolidation \cite{zhan}, and memory-mediated authorization laundering \cite{cerruti}. Our pre-audit mechanism concerns support checking and the preservation of the object to be audited. It is adjacent to, but does not establish, authorization-state corruption or unauthorized action. Nor can database labels alone turn our S5 and C3 observations into field examples of those mechanisms.
+
+Our reporting follows case-study guidance on context, multiple evidence sources, and traceability \cite{runeson}. The analysis is retrospective. We do not recast routine iteration as a preregistered experiment or a formal action-research protocol.
+
+\section{Project Context and System Evolution}
+\subsection{Initial purpose and development conditions}
+LingYao served four classes. Students accessed it through individual accounts; the teacher held primary responsibility for development and operation, assisted by AI tools. ``Single-developer'' here describes concentrated engineering and operational responsibility, not an assertion that all code was handwritten.
+
+The developer's retrospective account identifies companionship and learning assistance as the initial purpose. The later decision to stop maintenance combined unresolved interaction problems, development and verification work, and personal expenditure on the server and model services. No complete invoice series, time sheet, or maintenance-ticket history is available. These accounts describe a project decision; they do not establish a quantitative cost-effectiveness result.
+
+Use was organized within a course. Teacher instructions and task cards could influence questions, corrections, and continued dialogue. Consequently, repeated use cannot be interpreted directly as voluntary attachment, satisfaction, or learning improvement.
+
+\subsection{Documented stages}
+A project architecture report dated October 16, 2026 already described external persona and strategies, layered memory, permissions, and separate reply and write paths (material A1, Appendix~\ref{app:sources}). It predates the main classroom incidents but partly summarizes earlier reports. Table~\ref{tab:stages} therefore describes documented stages, not exact simultaneous deployment dates.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Documented stages and evidential limits.}\label{tab:stages}
+\begin{tabular}{P{.17\linewidth}P{.35\linewidth}P{.38\linewidth}}
+\toprule
+Stage & Design response & Evidence available \\
+\midrule
+Prototype and September use & External persona, state, dialogue strategies; increasing identity and memory controls & October 16 account of earlier work; incomplete links to individual original events \\
+Mid--late September adjustments & Separate external facts, hard governance, advisory context, and model cognition & Contemporaneous project summaries and referenced audits; no incidence estimates \\
+Early--mid October restructuring & Separate evidence from facts and proposals from committed state; cognition, authorization, expression, observation & October 16 description of the October 8 specification and later deployment; incomplete change-by-change version mapping \\
+Late October--early November investigation & Inspect historical acknowledgments, writes, audit, identity assembly, and isolated repairs & Classroom cases, frozen records, code inspection, reproductions, and repair reports \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+An export containing only role, content, and time does not demonstrate that the running system had only flat history. Likewise, the beginning of a frozen database around October 24 is not the creation date of every governance component. Later replay and probe labels also do not establish additional production restructurings. The evidence supports repeated responsibility changes, but not the comparative effect of every stage on all classes.
+
+\subsection{Reply and write paths after restructuring}
+The documented reply path checked account and session identity, recorded input, assembled understanding and retrieval material, formed response intentions and claims in a cognition component, limited usable material through authorization, and generated student-visible text in an expression component before checking and delivery. Memory proposals followed admission and authorization steps before persistent commitment and later retrieval.
+
+This division aimed to preserve both natural dialogue and evidential boundaries. It created interfaces that needed to work together: retrieved material had to reach the relevant component, references had to preserve speaker and time, and audits had to retain access to the content they were meant to check. A specified responsibility is not, by itself, proof that it was fulfilled at runtime.
+
+\subsection{Local-model exploration}
+The October 16 report records small-model and synthetic-data QLoRA tooling experiments on an A10 environment. Training on real student data and connecting a second production model were not completed in that account. Thus, the project did explore fine-tuning tools; it did not establish that fine-tuning would resolve classroom latency, long-term memory, or attribution. The incomplete route is neither a demonstrated alternative nor evidence that self-hosted models are infeasible.
+
+\section{Materials and Method}
+\subsection{Study design and units of analysis}
+This is a retrospective case study of one evolving system, combining use records, development documents, code inspection, and controlled reproductions. The units are: an interaction episode with necessary preceding and subsequent turns; an engineering event comprising diagnosis, change, validation, and disposition; and a system stage locating those events in their operational context. Missing classroom outputs were not regenerated and presented as historical observations.
+
+For each event, we distinguish the observation, initial interpretation, subsequent checks, intervention, and outcome. Dialogue establishes what was said; database rows establish what was stored. Code establishes that a path exists, while execution evidence is needed to establish its occurrence. A same-turn write cannot support an assertion that the content was already known before that turn. Temporal sequence alone does not establish that a patch caused a later problem. Every validation is identified as fixed-input, declared-output assembly, live-model, or field evidence.
+
+\subsection{Inventory and counting conventions}
+Table~\ref{tab:data} inventories data containers, not mutually exclusive samples. Messages and turns are different units, and overlapping sources must not be added.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Available containers and limits on interpretation.}\label{tab:data}
+\begin{tabular}{P{.22\linewidth}P{.25\linewidth}P{.43\linewidth}}
+\toprule
+Source & Inventory & Interpretation \\
+\midrule
+Account history files & 251 accounts; 14,191 messages & 7,096 user and 7,095 assistant messages; dates extend from June to November; includes test and unclassified accounts \\
+Historical archive & 108 subject identifiers; 27,484 messages & September 1--October 25; overlaps other sources; not fully deduplicated \\
+Frozen transcripts & 108 subject identifiers; 4,477 turns & October 24--November 4; real and synthetic subjects not completely classified \\
+Frozen memory & 1,321 rows & 1,320 ACTIVE and one SUPERSEDED; storage states do not establish correctness \\
+Expression attempts & 17,634 attempts & 14,160 parsed, 3,474 unparsed; not independent model-call or request-failure counts \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Four-class account allocations total 148, but the number of distinct real students has not been confirmed. Exactly 100 messages occur in 113 account files, indicating possible truncation or export limits; the configuration for this inventory has not been confirmed. Earlier raw/capped documentation has not been aligned account by account with these files. An account file ending in September does not establish an absence of later records elsewhere.
+
+Internal adequacy labels such as FULL, PARTIAL, and FAIL were not independently calibrated. In particular, 689 FAIL labels are not reported as 689 conversational or service failures. Archive PII/restriction flags indicate handling requirements, not that personally identifying content was individually detected in every message.
+
+\subsection{Classroom-case selection}
+Eight episodes, S1--S5 and C1--C3, were selected retrospectively from class 004 between 19:00 and 21:00 on October 29. S5 includes two sequential historical assertions. Later checks identified all eight as roster-bound real-student accounts. The daily inventory reports 466 turns and 21 subjects; an earlier report counted 22 updated subject files. These measures are not aligned, and neither provides a denominator for historical-confirmation opportunities.
+
+Selection order was not logged. Cases may have been selected for failure first and controls added later; the sample is one of convenience. Seven of the eight students had used a common classroom opening. One additional student used that opening but is outside the eight cases. The original task card and teacher script are missing, so we cannot determine which later sentences were teacher-directed. These are classroom interactions, not necessarily spontaneous companion use.
+
+Reproductions concerning long-term-memory auditing, identity, scenario attribution, and correction are reported separately. They do not increase the classroom-incident count. Replays of student inputs generate new assistant outputs and are not substituted for original classroom responses.
+
+\subsection{Privacy, consent, and researcher role}
+Accounts, names, and specific content are replaced by case codes and generic referents. Full conversations, databases, signed documents, and identity mappings remain restricted. Any excerpts included here are limited to what is needed to explain the observations. The author was also the teacher and developer, which could influence both student behavior and retrospective interpretation. AI tools assisted development and material preparation; no independent human coding or agreement statistic is claimed.
+
+The author confirms that course-use and informed-consent arrangements began on September 1, 2026, that signed student consent documents were obtained, and that course terms and a withdrawal mechanism were provided. This start date is not the signature date of every student. According to the responsible teacher, the institution did not have an ethics-review mechanism. The study received neither formal ethics-committee approval nor a formal waiver; participant consent is not represented as institutional approval.
+
+The author confirms that the student records, case analyses, and de-identified excerpts used in this paper fall within the scope of the applicable participant consent and course-use terms. Only de-identified excerpts necessary to support the analysis are reported. Signed consent documents, identity mappings, and full conversations remain restricted. A revised blank template prepared on November 7 does not retrospectively replace earlier signed versions.
+
+\section{Classroom Observations}
+\subsection{Unsupported acknowledgment of prior statements}
+In S1, the student asked whether the agent knew that they had previously said they liked song A. The assistant acknowledged that history. Inspection of canonical memory, the historical archive, and the transcript preceding the turn found no supporting record. S2 and S3 similarly contained direct historical acknowledgments without direct support in the inspected sources.
+
+For example, the de-identified S1 excerpt translates as: ``Yes, I remember that---you mentioned liking song A.'' In S3, it was: ``I remember; you said at the beginning that you did not like English song C.'' Translations here are explanatory renderings of the Chinese excerpts, not new model outputs.
+
+S3 requires a narrow interpretation. A general preference for relaxing and cheerful music existed, and the assistant had previously put song C in a playlist. Neither establishes the student's preference about that particular song. S3 lacks direct support; it is not a statement demonstrably contradicted by an explicit stored dislike or liking.
+
+In S2, the current statement was also stored. About two minutes later, the assistant identified group B as the newly remembered content. This demonstrates storage and subsequent use. It does not, on its own, prove that later use misrepresented current information as older history. The initial unsupported historical acknowledgment remains the clearest observed error.
+
+\subsection{Two stored statements are not necessarily contradictory preferences}
+In S5, the student first said that they had originally preferred cheerful music, then said that they had originally preferred sad music. Earlier dialogue supported the first historical acknowledgment but not the second. Two ACTIVE rows were stored; the later reply said that both had been said.
+
+The second acknowledgment lacked support. However, the student did make both statements in the present episode, so ``both were said'' can describe that episode literally. Two ACTIVE rows do not by themselves establish genuine conflicting preferences or failed retirement. Whether replacement was warranted depends on whether the rows denote current preferences, reports about past speech, or a correction. The record text still included the temporal phrase ``at the beginning''; it was not removed from the original text. Later semantic consequences have not been traced.
+
+\subsection{Response caution and write behavior must be assessed separately}
+In C3, the assistant said it could not find a prior mention and would not pretend to remember. The same turn nevertheless saved the student's whole statement, translated as ``I remember that I may just have told you I like team E,'' with FACT, STUDENT, and ACTIVE fields.
+
+That divergence warrants separate examination of reply and write paths, but does not alone prove a bad write. Storing that the student \emph{now reports} having said something may be legitimate. Interpreting it as proof of the past event would be a semantic upgrade. FACT is a storage-type label, not a truth verdict; UNKNOWN attribution fields indicate that the distinction was not fully structured. With no observed later reuse for C3, we report a write/read boundary requiring follow-up, not demonstrated downstream contamination.
+
+\subsection{A grounded recall initially misclassified by investigators}
+S4 was initially classified as fabricated recall. A wider search found matching student statements in the September 10 archive, and the diagnosis was corrected. The archive's ADVISORY label does not invalidate it as evidence of what was once said. A different question would arise if an old statement were asserted to be the student's current state.
+
+S4 is a methodological counterexample: an apparently unsupported answer can reflect incomplete investigator access rather than model fabrication. It prevents treating every historical acknowledgment in the sample as hallucination or acquiescence.
+
+\subsection{Appropriate responses within the same system}
+C1 and C2 appropriately denied finding the claimed history and produced no corresponding same-turn memory row. In C2, the assistant said, in translation, ``I cannot find a record that you mentioned game F before; I do not dare insist that I remember.'' These controls show behavioral variation; they do not estimate success rates.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Case conclusions and their limits.}\label{tab:cases}
+\begin{tabular}{P{.12\linewidth}P{.39\linewidth}P{.39\linewidth}}
+\toprule
+Case & Supported observation & Not established \\
+\midrule
+S1/S2/S3 & Prior speech acknowledged without direct support in inspected sources & Runtime audit branch; population incidence \\
+S2 & Current information stored and subsequently used & Later misrepresentation of its historical source \\
+S5 & First acknowledgment supported; second unsupported; two ACTIVE rows & Genuine preference change; mandatory retirement \\
+C3 & Historical basis denied; current report stored & Harmful downstream reuse \\
+S4 & Matching old utterances found; diagnosis corrected & Misuse solely because the source was ADVISORY \\
+C1/C2 & Appropriate denial & Overall system success rate \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{From Investigation to Repair}
+\subsection{Limits of classroom root-cause attribution}
+Code inspection identified candidate paths involving historical-claim recognition, exemptions, literal support matching, and auditing only declared claims. Production did not retain complete cognition/expression inputs and outputs or audit verdicts. A suspicious code path therefore cannot be assigned as the established cause of each classroom case. Recommendations about write classification and prior-evidence requirements did not become a complete deployed and validated closure. A recommendation is not a solved defect.
+
+\subsection{The pre-audit step excluded long-term material}
+A separately discovered path can be examined with fixed inputs. We call the preliminary check performed before formal claim auditing the \emph{pre-audit step}. It checked recent references but not long-term memory material. If it found no support for a historical assertion, it rewrote the answer as a present-turn acknowledgment and cleared the claims. The formal audit then received the modified text and an empty claim collection rather than the original historical assertion.
+
+The fixture supplied long-term material \texttt{mem\_pref}, meaning ``the student likes group B,'' with no recent material. The draft contained ``You previously said you liked group B; I remember.'' The reproduced branch changed the historical frame to ``I have noted that you now say you like group B'' and removed the claim collection. Listing~\ref{lst:path} shows the mechanism schematically.
+
+\begin{lstlisting}[caption={Schematic vulnerable path, not a full production implementation.},label={lst:path}]
+if asserts_prior_statement(draft):
+    ref = find_support(draft, recent_refs)  # excludes memos
+    if ref is None:
+        draft = rewrite_as_current_statement(draft)
+        claims = []
+
+audit_result = audit(claims, memos + recent_student_refs)
+# The original assertion is absent from the audit input.
+\end{lstlisting}
+
+The fixture is synthetic and is not a real student's production memory. Its preference text alone is also insufficient to prove that the student previously said it. The strongest conclusion is consequently about excluded material and removal of the audit object, not that every preference record justifies acknowledgment of past speech.
+
+This path was found during the same investigation as the classroom cases, but no evidence connects them as a deployment-induced sequence. We do not claim that a fix for false acknowledgment caused false denial.
+
+\subsection{Patch and verification scope}
+The patch covered four modules. It narrowed the pre-audit step to handling support information rather than directly rewriting text and clearing claims; included long-term material in support checks; refined subjects, clauses, and negation polarity; and separated display material from citation material. Table~\ref{tab:tests} separates the resulting checks.
+
+\begin{table}[htbp]
+\centering\small
+\caption{What the repair checks establish.}\label{tab:tests}
+\begin{tabular}{P{.25\linewidth}P{.20\linewidth}P{.45\linewidth}}
+\toprule
+Validation & Reported result & Evidential scope \\
+\midrule
+Fixed-input reproduction and six-case checks & Specified checks passed & Rewriting/removal behavior for supplied inputs; not free-generation performance \\
+Declared-output staging assembly & 6/6 & Actual assembly with fixed cognition/expression outputs; not six real student successes \\
+Unit tests & 10/10 & Tested clause, polarity, and support branches; not overall interaction reliability \\
+Live-model entry-point canary & One account, three normal turns & Login/chat entry and delivery; not long-term, cross-class, or population improvement \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Inputs may overlap between tests, so their counts are not added as independent samples. The patch affected modules in a shared production process; a single-account canary describes observation scope, not deployment isolation. No component-by-component ablation or large-scale before/after comparison was completed. The canary does not provide a model-call count.
+
+The accompanying minimal reproduction is a self-contained logic mirror, not an import of production modules. Executing it establishes the mirror's behavior. It neither proves complete equivalence with the deployed version nor substitutes for the original deployment-function reproduction reported in the project materials. Its simplified audit return is explicitly a stub, not a reimplementation of the full audit algorithm.
+
+\subsection{Other investigations locate different failure stages}
+In scenario-memory tests, one missing write followed rejection of an evidence-reference type; another followed the model's failure to propose a memory at all. Both appear to a user as ``not remembered,'' but occur at different stages. Experimental handling improved some cases while leaving proposal omissions and broadened scopes unresolved; it was not deployed.
+
+An identity/story reproduction found that the expression component did not receive expected identity material. A prompt-only version did not solve this; subsequent material restructuring eventually passed one case, with regressions in intermediate variants. Avoiding story contamination and preserving usable identity both required checking.
+
+A correction request returning HTTP 504 was traced to an undefined variable. Target selection, negation handling, and retirement of derived records were separate issues. Fixing the exception did not establish complete correction capability. Synthetic batch tests also found old derived rows remaining ACTIVE, without establishing the same outcome across real students.
+
+An audit of answer thinning identified fallback paths that could remove plans or opinions. No trigger was observed in the 22 relevant turns examined. We therefore report a code risk, not pervasive production impairment. These investigations show why a shared user-visible symptom cannot be assigned automatically to a single module.
+
+\subsection{Repeated questioning and goal selection in isolated replays}
+In replay S05, the same request to prepare a travel plan appeared twice. Configuration A supplied assumptions, a framework, and a two-day itinerary; configuration V3 continued to request destination, duration, budget, and companions. These are regenerated replay responses. Configuration names do not establish which output the student originally received.
+
+In replay S13, ``change it'' followed by ``game'' led to continued emphasis on new versions and non-repetition in V3. The report interpreted a one-off request as becoming persistent, but did not show a corresponding long-term write. We report persistent versioning in the replay, not a proven stored preference.
+
+An isolated prompt adjustment raised the priority of providing a revisable draft when information was sufficient. Two 16-turn sequences contained 11 and eight question-bearing turns, respectively; neither produced a final version. These are descriptive counts without repeated runs or statistical inference. Fewer questions do not establish faster task completion. The change was not deployed.
+
+An L7 probe located some questions in cognition-level goals: requesting audience information elicited ``I don't know,'' and asking the student to invent a memorable point elicited ``I can't think of one.'' Adjustments produced bounded recoveries, including moving directly to a performable fragment or dropping the audience question. A late confirmation loop remained. An ambiguous report of ``4/4 substantive changes, one partial'' is not used as a success rate.
+
+\section{Cross-Case Analysis and Maintenance Limits}
+\subsection{Continuity is a chain of responsibilities}
+For a student, remembering is one experience. For this system, it depended on retaining records, finding relevant material, preserving speaker and temporal meaning, and using it appropriately. S4 shows how source coverage changes a diagnosis; the pre-audit reproduction shows material present but excluded from a check; identity tests show why a prompt cannot replace absent input material. Increasing storage or changing retrieval alone would not automatically address all of these cases.
+
+\subsection{Check unwarranted acceptance and unwarranted removal together}
+The classroom cases contain unsupported acknowledgment, while the separate mechanism excludes long-term material and rewrites claims. This suggests checking both erroneous acceptance and removal of potentially useful expression. No quantitative trade-off curve was measured. The operational lesson is narrower: preserve the original audit object and assess what the audit actually saw, rather than treating completion as evidence of examination.
+
+\subsection{Structured labels do not resolve meaning}
+FACT, ACTIVE, source references, and role labels organize state but do not determine whether text describes a present preference, a report about past speech, a hypothesis, or a real event. S5 and C3 resist both overinterpretations: neither the type label nor the retained temporal wording proves later semantic correctness. Programs can check that a record exists and belongs to an account. Whether a source supports a particular summary remains a different question that this project did not reliably solve.
+
+\subsection{Restructuring expands the interfaces that need checking}
+Explicit responsibility boundaries created places to govern evidence and writes. They also made delivery depend on interfaces between the pre-audit step and formal audit, cognition and expression, and proposals and persistence. The cases establish concrete failures at such interfaces. They do not establish that more modules necessarily cause more failures: no comparison held tasks, models, and resources constant across simple and complex architectures.
+
+\subsection{Partial repair did not remove maintenance work}
+It would be inaccurate to say that every patch failed. Some changed specific paths as intended. Yet the evidence for improvement remained distributed across deterministic tests, isolated probes, and a few live entry-point turns. It did not establish stable long-term classroom performance.
+
+Continued work required deciding which records were trustworthy, what version was running, where a failure occurred, whether a patch changed another responsibility, and whether available tests represented real dialogue. This involved more than adding prompt lines. We have no complete time series with which to quantify growth in that burden.
+
+\subsection{Why development of this architecture stopped}
+The developer personally funded the server and model services while facing classroom response requirements. A small-model and fine-tuning route was explored but not validated as a production substitute. Further investigation would require implementation, data preparation, training or serving work, and continued verification.
+
+The materials provide 17,632 expression-attempt latency values: mean 1,312.6\,ms, median 1,280.1\,ms, and 95th percentile 2,087.2\,ms. These measure expression attempts, not end-to-end student latency; they exclude the complete understanding, retrieval, cognition, retries, and queueing path. They cannot establish classroom responsiveness or minimum hardware. Network addresses and ports do not supply missing CPU, GPU, memory, or throughput measurements.
+
+The retrospective decision combined three conditions: important interaction problems remained unresolved; investigation and verification responsibilities were concentrated in one person; and personally sustained operation and further development were difficult to continue. Resource limits do not establish technical impossibility, and unresolved defects do not erase partial improvements. The decision concerned this architecture under these conditions, not the abandonment of classroom companion agents in general.
+
+We do not estimate an optimal latency/cost/quality relationship, assert that APIs are the only low-latency option, assume that APIs universally prohibit fine-tuning, or claim that fine-tuning would solve the semantic problems. The incomplete local route remains an exploration rather than a demonstrated conclusion.
+
+\section{Threats to Validity and Open Questions}
+\paragraph{Uneven temporal coverage.}
+The background spans September to early November, but detailed classroom evidence is concentrated on October 29. Earlier stages rely more heavily on project reports and are not equally dense longitudinal observations.
+
+\paragraph{Selection and unit ambiguity.}
+Accounts are not distinct students, messages are not turns, and containers overlap. The eight episodes are a convenience sample without an incidence denominator. Their roster status and common openings were checked, but the missing teacher script prevents separating spontaneous requests from directed activity sentence by sentence.
+
+\paragraph{Incomplete mechanism visibility.}
+Missing raw production inputs, outputs, and audit verdicts limit root-cause attribution. Controlled reproduction is not automatically evidence that the same branch caused a field episode. The distributed logic mirror has an even narrower claim.
+
+\paragraph{Researcher involvement.}
+The teacher/developer selected and interpreted material. Retrospection and AI-assisted reports can preserve earlier mistakes. Some diagnoses were corrected, but no independent human coding or inter-rater agreement result is available.
+
+\paragraph{Confounded changes.}
+Multi-module patches were not ablated. Historical endpoints, prompts, and task conditions were not fully frozen. Apparent changes cannot be attributed to a single component or extrapolated as causal improvements across production.
+
+\paragraph{Unmeasured outcomes and transfer.}
+No independent longitudinal companionship or learning outcome was measured. Ending a dialogue need not indicate frustration, nor continuing it satisfaction. Findings from this system, course, and resource setting do not directly generalize to all companion agents.
+
+\paragraph{Retrospective resource account.}
+Personal funding, concentrated responsibility, and stopping reasons are developer testimony with incomplete financial and labor records. They do not identify universal resource thresholds or show what a differently staffed project would have achieved.
+
+\section{Conclusion}
+LingYao began with a classroom goal of companionship and learning assistance. On \textbf{RQ1}, inspected records show unsupported historical acknowledgment alongside appropriate denial; wider archival inspection corrected one apparent fabrication into grounded recall. Repeated questioning and bounded recovery are additionally documented by replays and probes, which remain distinct from original classroom outputs. Overall failure incidence is unknown.
+
+On \textbf{RQ2}, fixed-input evidence identifies a pre-audit step that omitted long-term material, rewrote an answer, and removed the claims available for audit. A patch changed the specified behavior and passed bounded checks; three live entry-point turns completed normally. This does not establish sustained classroom reliability or convert undeployed changes into production improvements.
+
+On \textbf{RQ3}, the developer stopped maintaining the original architecture while key problems remained, considering concentrated maintenance responsibility, personally funded operation, and classroom demands. This is a contextualized project decision rather than a general technical verdict.
+
+The case demonstrates why user-visible outcomes must be examined together with the passage of evidence across memory, identity, expression, and audit responsibilities. Its record includes appropriate behavior, mistaken diagnoses, limited improvements, and unresolved paths. Those distinctions are the basis for learning from the deployment, rather than treating either complexity or a passed test as proof of a functioning whole.
+
+\section*{Data and Code Availability}
+Student conversations, identity mappings, signed consent documents, and databases are not released. A minimal reproduction package is provided as ancillary material with this preprint in \texttt{anc/repro}. It contains synthetic fixed inputs, a self-contained mechanism mirror, expected output, and instructions, and requires no model service, network access, or student data. The source index in Appendix~\ref{app:sources} distinguishes restricted project documents from this executable illustration; neither is represented as an independently reproduced production system.
+
+\section*{Author and AI Assistance Statement}
+The author was the course teacher and principal developer/operator. AI tools assisted implementation, investigation, organization, translation, and editing. These uses do not constitute independent human validation. The author reports personally funding the operation described; no complete cost or labor estimate is presented. The author takes responsibility for the arguments, analyses, and any errors in the manuscript.
+
+\begin{thebibliography}{12}
+\bibitem{bickmore} T. W. Bickmore and R. W. Picard. Establishing and maintaining long-term human-computer relationships. \emph{ACM Transactions on Computer-Human Interaction}, 12(2):293--327, 2005. \url{https://doi.org/10.1145/1067860.1067867}.
+\bibitem{xiaoice} L. Zhou, J. Gao, D. Li, and H.-Y. Shum. The design and implementation of XiaoIce, an empathetic social chatbot. \emph{Computational Linguistics}, 46(1):53--93, 2020. \url{https://aclanthology.org/2020.cl-1.2/}.
+\bibitem{luger} E. Luger and A. Sellen. ``Like Having a Really Bad PA'': The gulf between user expectation and experience of conversational agents. In \emph{Proceedings of CHI 2016}, pp. 5286--5297, 2016. \url{https://doi.org/10.1145/2858036.2858288}.
+\bibitem{mavrina} L. Mavrina, J. Szczuka, C. Strathmann, L. M. Bohnenkamp, N. Kr\"amer, and S. Kopp. ``Alexa, You're Really Stupid'': A longitudinal field study on communication breakdowns between family members and a voice assistant. \emph{Frontiers in Computer Science}, 4:791704, 2022. \url{https://doi.org/10.3389/fcomp.2022.791704}.
+\bibitem{gnewuch} U. Gnewuch and F. Reinkemeier. Overcoming breakdowns in customer-chatbot interaction: Design and impact of collaborative repair strategies. \emph{MIS Quarterly}, 50(2):497--526, 2026. \url{https://aisel.aisnet.org/misq/vol50/iss2/8/}.
+\bibitem{sculley} D. Sculley et al. Hidden technical debt in machine learning systems. In \emph{Advances in Neural Information Processing Systems}, volume 28, 2015. \url{https://research.google/pubs/hidden-technical-debt-in-machine-learning-systems/}.
+\bibitem{pan} M. Pan et al. Measuring agents in production. In \emph{Proceedings of the 43rd International Conference on Machine Learning}, PMLR 306, pp. 95649--95695, 2026. \url{https://proceedings.mlr.press/v306/pan26a.html}.
+\bibitem{wu} W. Wu. When errors become narratives: A longitudinal taxonomy of silent failures in a production LLM agent runtime. \emph{arXiv preprint}, arXiv:2606.14589, 2026. \url{https://arxiv.org/abs/2606.14589}.
+\bibitem{runeson} P. Runeson and M. H\"ost. Guidelines for conducting and reporting case study research in software engineering. \emph{Empirical Software Engineering}, 14:131--164, 2009. \url{https://doi.org/10.1007/s10664-008-9102-8}.
+\bibitem{wang} Y. Wang, C. Yu, J. Zhang, Y. Duan, M. Zheng, Z. Wu, K. Shi, and T. Cai. From faulty memories to corrected actions: Dependency-guided rollback repair for memory-augmented agents. \emph{arXiv preprint}, arXiv:2608.10502v2, 2026. \url{https://arxiv.org/abs/2608.10502v2}.
+\bibitem{zhan} Q. Zhan, R. Zhang, S. Guo, L. Zhao, and Z. Liu. When memory becomes authority: Benchmarking authority collapse at the memory consolidation boundary. \emph{arXiv preprint}, arXiv:2608.01679v2, 2026. \url{https://arxiv.org/abs/2608.01679v2}.
+\bibitem{cerruti} T. Cerruti, M. Okamoto, and A. K. Erol. Agent memory is a surface for endogenous authorization laundering. arXiv:2609.01836v2, 2026. The arXiv record reports acceptance at the NeurIPS 2026 PALM Workshop. \url{https://arxiv.org/abs/2609.01836v2}.
+\end{thebibliography}
+
+\appendix
+\section{Source Index and Evidence Boundaries}\label{app:sources}
+The following index identifies the materials used during preparation. Internal documents are not presented as publicly accessible publications. Commit identifiers locate restricted snapshots; access to a link is not assumed.
+
+\small
+\begin{longtable}{P{.07\linewidth}P{.39\linewidth}P{.44\linewidth}}
+\toprule
+ID & Material & Use and boundary \\
+\midrule\endhead
+A1 & October 16 architecture report, \emph{LingYao: Overall Architecture and Design Driven by Real Problems} & Contemporaneous project synthesis of early goals, responsibilities, restructuring, and synthetic QLoRA exploration; not a complete deployment log \\
+A2 & \texttt{DATA\_INVENTORY.md} & Container counts and coverage; message/turn and overlap limitations retained \\
+A3 & \texttt{APPENDIX\_E1\_E2.md} & Classroom excerpts, database observations, mechanism, patch, and checks; stronger contamination interpretations in the source are not automatically adopted \\
+A4 & \texttt{INCIDENT\_EVOLUTION.md} & Event relationships, treatment, and deployment status; candidate code paths remain distinct from observed execution \\
+A5 & \nolinkurl{ARCHITECTURE_TIMELINE_2026-09_10.md} & Later index to stages and incidents; used with A1 rather than as a substitute for original records \\
+A6 & Developer/teacher account, November 7, 2026 & Purpose, personal funding, stopping decision, and confirmation of consent coverage for the included records and excerpts; no complete financial history \\
+A7 & \texttt{PAPER\_MATERIALS.md} and original \texttt{repro/} & Supplementary replays, probes, case-background checks, and a logic mirror; snapshot \texttt{aed6732} \\
+\bottomrule
+\end{longtable}
+\normalsize
+Materials A2--A5 were assembled under \texttt{research\_2026\_09/} in restricted project snapshot \texttt{a4d6874}, with the later supplement A7 at \texttt{aed6732}. Source documents contain some earlier interpretations that the present analysis explicitly narrows. The accompanying synthetic mirror is executable without this restricted repository.
+
+\clearpage
+\section{Claims and Evidential Strength}\label{app:claims}
+\small
+\begin{longtable}{P{.36\linewidth}P{.26\linewidth}P{.28\linewidth}}
+\toprule
+Claim & Basis & Strength/limit \\
+\midrule\endhead
+Initial purpose was companionship and learning help & Developer account and stage documents & Design purpose, not demonstrated effect \\
+The system underwent repair and restructuring & A1, later code and reports & Evolution established; complete date/version alignment unavailable \\
+Unsupported historical acknowledgments occurred & S1/S2/S3 and second S5 turn & Within inspected evidence; no incidence estimate \\
+One apparent fabrication was grounded & S4 and historical archive & Corrected diagnosis \\
+Preliminary processing excluded long-term material and removed claims & Fixed-input reproduction and code & Mechanism established for supplied input; not its field frequency \\
+The patch changed specified processing & Deterministic and assembly checks & Local validation; no overall production improvement claim \\
+Stopping maintenance reflected unresolved issues and resource burden & Developer account and unfinished treatments & Contextual project decision; no quantified cost causality \\
+\bottomrule
+\end{longtable}
+\normalsize
+\end{document}

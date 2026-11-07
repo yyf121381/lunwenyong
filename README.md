@@ -1,47 +1,53 @@
-# LingYao: Memory Evidence Boundaries — Paper Companion
+# LingYao Field Study — Public Companion Materials
 
-Public companion materials for a paper on memory-evidence boundaries in a classroom lyric-writing assistant. This repository is **not** the production system and does not contain student records.
+Paper: **From Companionship Goals to Maintenance Limits: A Case Study of a Classroom Conversational Agent**
+Author: Liuqing Yang (杨柳青), Jiangxi Institute of Applied Science and Technology
 
-## Status
+Status: preprint prepared; not submitted; no arXiv identifier yet.
 
-- **Paper PDF / LaTeX:** pending. The English paper and source will be added in a later commit.
-- **This commit:** minimal reproduction, desensitized case table, validation summaries, source index, citation, license.
+## Research questions
 
-## What is here
+- **RQ1:** What obstacles to sustained dialogue are visible in the available records, and which can be connected to internal system evidence?
+- **RQ2:** What did patches and architectural changes actually alter, and which effects remain limited to controlled tests?
+- **RQ3:** How did unresolved problems, maintenance work, and resource conditions influence the decision to stop maintaining this architecture?
+
+## Contents
 
 | Path | Contents |
 |---|---|
-| `repro/` | Synthetic fixed input, control-flow mirror script, expected output, key code excerpts, run instructions |
-| `cases/e1_eight_cases.md` | Eight-case desensitized table; observation, interpretation, and unknown separated |
-| `validation/` | Deterministic checks, assembly tests, and canary results reported separately |
-| `docs/SOURCE_INDEX.md` | Public file index; what is restricted and not included |
-| `CITATION.cff` | Citation metadata (working title) |
-| `LICENSE` | MIT for code |
+| `paper/main.tex` | LaTeX source of the English paper |
+| `paper/LingYao_arXiv_English.pdf` | English paper PDF |
+| `repro/` | Synthetic fixed input, control-flow mirror, expected output, code excerpts, run notes |
+| `evidence/case_table.md` | Eight classroom cases; observation, interpretation, not established |
+| `evidence/validation_scope.md` | Fixed-input, assembly, unit, and canary results reported separately |
+| `evidence/data_inventory.md` | Aggregate containers; units and overlap limits |
+| `evidence/source_index.md` | Public files and restricted-material boundary |
+| `CITATION.cff` | Citation metadata |
+| `LICENSE-CODE` | MIT for code |
+| `RIGHTS.md` | Paper, code, and evidence rights |
 
-## What is not here
+## Reproduce
 
-- Full student transcripts, account mappings, databases, credentials, or private text.
-- The production implementation. The reproduction is a **control-flow mirror**, not the full system.
-- The original repository history.
+```bash
+cd repro
+python3 repro_pre_step.py > actual_output.json
+python3 -c 'import json; assert json.load(open("actual_output.json")) == json.load(open("expected_output.json")); print("MATCH")'
+```
 
-## Reproduction caveat
+Python 3 standard library only; no network, model, store, or student data. The script is a **control-flow mirror**, not the production module or a complete audit implementation. Its two formal-audit returns are explicit illustrative stubs.
 
-`repro/repro_pre_step.py` reproduces one deterministic pre-step defect from release `98ab054`: with long-term memory but an empty recent window, a valid “you said before…” acknowledgement is rewritten as a current-turn self-report and the audit passes vacuously.
+## Evidence boundary
 
-It is a logic mirror: no production imports, no model call, no store, no network. It does **not** reproduce model behavior, production rates, or the full decision chain.
+- **Deterministic:** fixed input; shows the mirrored path rewrites and clears claims under those inputs.
+- **Assembly:** real assembly with declared model output; 6/6 fixed cases; not live-model behavior.
+- **Canary:** three real-entry turns on one account; entry behavior only; not window isolation, scale, or production improvement.
+- **Classroom cases:** eight convenience-selected episodes; no incidence denominator; selection order not logged.
+- **Replays/probes:** regenerated outputs, not original classroom responses; undeployed changes are not counted as production improvements.
 
-## Evidence classes
+## Not included
 
-| Class | What it is | What it can support |
-|---|---|---|
-| Deterministic | Fixed input + mirror script + expected output | The code path rewrites under these inputs |
-| Assembly | Real assembly with declared model output | The chain passes/fails for fixed cases |
-| Canary | Three real-entry turns, one account | Entry-level behavior only; not scale or window isolation |
+Full student conversations, historical exports, databases, memory stores, account mappings, subject hashes, names, credentials, server configuration, signed consent documents, and the original repository history remain restricted.
 
-## Citation
+## Citation and rights
 
-See `CITATION.cff`. The title is a working title and will be updated with the paper.
-
-## License
-
-Code: MIT (see `LICENSE`). Paper and text license will be added with the paper.
+See `CITATION.cff` and `RIGHTS.md`. Code is MIT. The paper license is to be chosen by the author in the arXiv submission interface; this repository does not default it to CC BY.

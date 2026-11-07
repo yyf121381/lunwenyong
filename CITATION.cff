@@ -1,9 +1,11 @@
 cff-version: 1.2.0
 message: "If you use these materials, please cite the paper when it is available."
-title: "LingYao: Memory Evidence Boundaries (working title)"
+title: "From Companionship Goals to Maintenance Limits: A Case Study of a Classroom Conversational Agent"
 authors:
-  - name: "LingYao Project Contributors"
+  - family-names: "Yang"
+    given-names: "Liuqing"
+    affiliation: "Jiangxi Institute of Applied Science and Technology, Nanchang, China"
 year: 2026
+version: "2026-11-07"
 url: "https://github.com/yyf121381/lunwenyong"
 repository-code: "https://github.com/yyf121381/lunwenyong"
-license: MIT

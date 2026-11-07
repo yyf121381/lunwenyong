@@ -1,0 +1,24 @@
+Vulnerable pre-audit control flow (restricted source snapshot 98ab054)
+
+The project evidence index locates the following excerpt at
+lingyao_next/chain/link_a.py:1319-1325:
+
+    elif _text_has_prior(draft.text):
+        span = _prior_span(draft.text)
+        ref = _recent_support_ref(span, world.recent_refs)
+        if not ref:
+            draft = _repair_prior_text(draft)
+            claims = ()
+
+The same evidence index identifies construction of prior_refs from memos and
+recent student references at lines 1299-1303, and the later formal audit at
+line 1345. These are indexed excerpts, not an execution trace for classroom cases.
+
+Provenance: research_2026_09/APPENDIX_E1_E2.md and PAPER_MATERIALS.md,
+project evidence snapshot aed6732. The public mirror does not import this module.
+Original subject mappings and production records are restricted and not included.
+
+Interpretation: material supplied only to a later audit cannot restore a claim
+that an earlier stage removed. The audit stub in repro_pre_step.py illustrates
+the empty-input consequence; it does not reproduce the full production auditor.
+This artifact is neither a complete vulnerable deployment nor a patch benchmark.
